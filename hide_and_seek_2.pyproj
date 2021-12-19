@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>eaa9b906-a4a8-4771-9d90-76a1f1d091c4</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>main.py</StartupFile>
+    <StartupFile>environment.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -12,6 +12,8 @@
     <Name>hide_and_seek_2</Name>
     <RootNamespace>hide_and_seek_2</RootNamespace>
     <InterpreterId>MSBuild|env|$(MSBuildProjectFullPath)</InterpreterId>
+    <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
+    <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,7 +24,31 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="action.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="environment.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="main.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="map\a_star.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="map\game.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="map\matz.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="map\point.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="map\map.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="map\test.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -36,6 +62,10 @@
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
       <Architecture>X64</Architecture>
     </Interpreter>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="image\" />
+    <Folder Include="map\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
