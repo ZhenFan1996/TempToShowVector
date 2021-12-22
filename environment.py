@@ -25,17 +25,18 @@ def main():
     clock = pygame.time.Clock()
     window.fill(GREY)
     drawGrid()
-    ori = (0,0)
+    ori = (0,0)       
     while True:    
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                sys.exit()         
-        aim = randomRun(ori)
-        run(ori,aim)
-        ori = aim
+                sys.exit()
         pygame.display.flip()
-        clock.tick(5)
+    #    aim = randomRun(ori)
+    #    run(ori,aim)
+    #    ori = aim
+    #    pygame.display.flip()
+    #    clock.tick(5)
 
 def init(eventT):
     global window, clock,ori,flag
@@ -87,7 +88,7 @@ def run(ori,aim):
      pygame.draw.rect(window, WHITE, rect1, 1)
 
 
-def follow(path_Gived):
+def update(path_Gived):
     global flag,path
     path = path_Gived
     flag = True
@@ -101,7 +102,10 @@ def path_draw(path_list):
     clock.tick(5)
 
 def point_draw(path_list):
-    run(path_list[-2],path_list[-1])
+    if(len(path_list)==1):
+        run((0,0),(0,0))
+    else:
+       run(path_list[-2],path_list[-1])
     pygame.display.flip()
     clock.tick(5)
 

@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>eaa9b906-a4a8-4771-9d90-76a1f1d091c4</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>environment.py</StartupFile>
+    <StartupFile>action.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
