@@ -14,6 +14,7 @@ RED = np.array((255,0,0))
 window_height = 600
 window_width = 600
 matz = np.zeros([window_height // 10,window_width // 10])
+blockSize =30
 flag = False
 path = []
 
@@ -32,18 +33,17 @@ def main():
                 pygame.quit()
                 sys.exit()
         pygame.display.flip()
-    #    aim = randomRun(ori)
-    #    run(ori,aim)
-    #    ori = aim
-    #    pygame.display.flip()
-    #    clock.tick(5)
+        aim = randomRun(ori)
+        run(convertPos(ori),convertPos(aim))
+        ori = aim
+        pygame.display.flip()
+        clock.tick(5)
 
 def init(eventT):
     global window, clock,ori,flag
     pygame.init()
     window = pygame.display.set_mode((window_height, window_width))
     clock = pygame.time.Clock()
-    ori = (0,0)
     window.fill(GREY)
     drawGrid()
     while True:       
@@ -64,7 +64,6 @@ def init(eventT):
     
 
 def drawGrid():
-    blockSize = 10 
     for x in range(window_width):
         for y in range(window_height):
             rect = pygame.Rect(x * blockSize, y * blockSize,
@@ -73,14 +72,13 @@ def drawGrid():
 
 
 def run(ori,aim):
-     blockSize = 10 
-     orie = pygame.Rect(ori[0] * blockSize, ori[1] * blockSize,
+     orie = pygame.Rect((ori[0]) * blockSize, (ori[1]) * blockSize,
                                blockSize, blockSize)
-     rect1 = pygame.Rect(ori[0] * blockSize, ori[1] * blockSize,
+     rect1 = pygame.Rect((ori[0]) * blockSize, (ori[1]) * blockSize,
                                blockSize, blockSize)
-     aime = pygame.Rect(aim[0] * blockSize, aim[1] * blockSize,
+     aime = pygame.Rect((aim[0]) * blockSize, (aim[1]) * blockSize,
                                blockSize, blockSize)
-     rect2 = pygame.Rect(aim[0] * blockSize, aim[0] * blockSize,
+     rect2 = pygame.Rect((aim[0]) * blockSize, (aim[1]) * blockSize,
                                blockSize, blockSize)
      pygame.draw.rect(window,W,orie)
      pygame.draw.rect(window,RED,aime)
@@ -94,9 +92,9 @@ def update(path_Gived):
     flag = True
 
 def path_draw(path_list):
-    ori = (0,0)
+    ori = (window_width // blockSize,0)
     for position in path_list:
-     run(ori,position)
+     run(convertPos(ori),convertPos(position))
      ori = position
     pygame.display.flip()
     clock.tick(5)
@@ -150,6 +148,12 @@ def randomRun(ori):
         return [ori[0],ori[1] - 1]
     elif direction == 3:
         return [ori[0],ori[1] + 1]
+
+def convertPos(pos):
+    ans = [0,0]
+    ans[0]= pos[1] + 4
+    ans[1] =window_width // blockSize - pos[0] -4
+    return ans
 
 if __name__ == "__main__":
     main()
