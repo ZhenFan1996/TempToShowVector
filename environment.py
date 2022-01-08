@@ -16,7 +16,10 @@ window_width = 600
 matz = np.zeros([window_height // 10,window_width // 10])
 blockSize =30
 flag = False
+flagO = False
 path = []
+dir =0
+pos = (0,0)
 
 
 def main():
@@ -48,9 +51,12 @@ def init(eventT):
     drawGrid()
     while True:       
         MOVE_EVENT = pygame.USEREVENT + 1
+        Obstacle_Event = pygame.USEREVENT +2
         if flag == True:
           move_event = pygame.event.Event(MOVE_EVENT,{"path": path})
           pygame.event.post(move_event)
+        if flagO == True:
+          obstacle_event = pygame.event.Event(Obstacle_Event,[])
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -58,10 +64,50 @@ def init(eventT):
             elif event.type == MOVE_EVENT:
                 path_draw(path)
                 flag = False
+            elif event.type == Obstacle_Event:
+                obstacle_draw()
+                flagO = False
         pygame.display.flip()
        
-        
-    
+
+def obstacle_update(pos_given,dir_given):
+     global flagO,pos,dir
+     flagO = True
+     pos = pos_given
+     dir = dir_given
+
+def obstacle_draw(pos,dir):
+    if dir == 0: # x++ 上
+     o1 = pygame.Rect((pos[0]) * blockSize, (pos[1]+1) * blockSize,
+                               blockSize, blockSize)
+     o2 = pygame.Rect((pos[0]+1) * blockSize, (pos[1]+1) * blockSize,
+                               blockSize, blockSize)
+     pygame.draw.rect(window, BLACK, o1, 1)
+     pygame.draw.rect(window, BLACK, o2, 1)
+    elif dir ==1: # y--右
+      o1 = pygame.Rect((pos[0]) * blockSize, (pos[1]+1) * blockSize,
+                               blockSize, blockSize)
+      o2 = pygame.Rect((pos[0]+1) * blockSize, (pos[1]+1) * blockSize,
+                               blockSize, blockSize)
+      pygame.draw.rect(window, BLACK, o1, 1)
+      pygame.draw.rect(window, BLACK, o2, 1)
+    elif dir ==2: # y++ 左
+      o1 = pygame.Rect((pos[0]) * blockSize, (pos[1]+1) * blockSize,
+                               blockSize, blockSize)
+      o2 = pygame.Rect((pos[0]+1) * blockSize, (pos[1]+1) * blockSize,
+                               blockSize, blockSize)
+      pygame.draw.rect(window, BLACK, o1, 1)
+      pygame.draw.rect(window, BLACK, o2, 1)
+    elif dir ==3: # x--下
+      o1 = pygame.Rect((pos[0]) * blockSize, (pos[1]+1) * blockSize,
+                               blockSize, blockSize)
+      o2 = pygame.Rect((pos[0]+1) * blockSize, (pos[1]+1) * blockSize,
+                               blockSize, blockSize)
+      pygame.draw.rect(window, BLACK, o1, 1)
+      pygame.draw.rect(window, BLACK, o2, 1)
+
+
+     
 
 def drawGrid():
     for x in range(window_width):
