@@ -43,7 +43,7 @@ def main():
         clock.tick(5)
 
 def init(eventT):
-    global window, clock,ori,flag
+    global window, clock,ori,flag,flagO
     pygame.init()
     window = pygame.display.set_mode((window_height, window_width))
     clock = pygame.time.Clock()
@@ -56,7 +56,8 @@ def init(eventT):
           move_event = pygame.event.Event(MOVE_EVENT,{"path": path})
           pygame.event.post(move_event)
         if flagO == True:
-          obstacle_event = pygame.event.Event(Obstacle_Event,[])
+          obstacle_event = pygame.event.Event(Obstacle_Event,{})
+          pygame.event.post(obstacle_event)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -65,7 +66,8 @@ def init(eventT):
                 path_draw(path)
                 flag = False
             elif event.type == Obstacle_Event:
-                obstacle_draw()
+                print('run')
+                obstacle_draw(convertPos(pos),dir)
                 flagO = False
         pygame.display.flip()
        
@@ -77,34 +79,47 @@ def obstacle_update(pos_given,dir_given):
      dir = dir_given
 
 def obstacle_draw(pos,dir):
+    print(pos[0],pos[1],dir)
     if dir == 0: # x++ 上
-     o1 = pygame.Rect((pos[0]) * blockSize, (pos[1]+1) * blockSize,
+     o1 = pygame.Rect((pos[0]) * blockSize, (pos[1]-1) * blockSize,
                                blockSize, blockSize)
-     o2 = pygame.Rect((pos[0]+1) * blockSize, (pos[1]+1) * blockSize,
+     o2 = pygame.Rect((pos[0]+1) * blockSize, (pos[1]-1) * blockSize,
                                blockSize, blockSize)
-     pygame.draw.rect(window, BLACK, o1, 1)
-     pygame.draw.rect(window, BLACK, o2, 1)
+     o3 = pygame.Rect((pos[0]+2) * blockSize, (pos[1]-1) * blockSize,
+                               blockSize, blockSize)
+     pygame.draw.rect(window, BLACK, o1)
+     pygame.draw.rect(window, BLACK, o2)
+     pygame.draw.rect(window, BLACK, o3)
     elif dir ==1: # y--右
-      o1 = pygame.Rect((pos[0]) * blockSize, (pos[1]+1) * blockSize,
+      o1 = pygame.Rect((pos[0]+1) * blockSize, (pos[1]) * blockSize,
                                blockSize, blockSize)
       o2 = pygame.Rect((pos[0]+1) * blockSize, (pos[1]+1) * blockSize,
                                blockSize, blockSize)
-      pygame.draw.rect(window, BLACK, o1, 1)
-      pygame.draw.rect(window, BLACK, o2, 1)
+      o3 = pygame.Rect((pos[0]+1) * blockSize, (pos[1]+2) * blockSize,
+                               blockSize, blockSize)
+      pygame.draw.rect(window, BLACK, o1)
+      pygame.draw.rect(window, BLACK, o2)
+      pygame.draw.rect(window, BLACK, o3)
     elif dir ==2: # y++ 左
-      o1 = pygame.Rect((pos[0]) * blockSize, (pos[1]+1) * blockSize,
+      o1 = pygame.Rect((pos[0]-1) * blockSize, (pos[1]) * blockSize,
                                blockSize, blockSize)
-      o2 = pygame.Rect((pos[0]+1) * blockSize, (pos[1]+1) * blockSize,
+      o2 = pygame.Rect((pos[0]-1) * blockSize, (pos[1]-1) * blockSize,
                                blockSize, blockSize)
-      pygame.draw.rect(window, BLACK, o1, 1)
-      pygame.draw.rect(window, BLACK, o2, 1)
+      o3 = pygame.Rect((pos[0]-1) * blockSize, (pos[1]-2) * blockSize,
+                               blockSize, blockSize)
+      pygame.draw.rect(window, BLACK, o1)
+      pygame.draw.rect(window, BLACK, o2)
+      pygame.draw.rect(window, BLACK, o3)
     elif dir ==3: # x--下
       o1 = pygame.Rect((pos[0]) * blockSize, (pos[1]+1) * blockSize,
                                blockSize, blockSize)
       o2 = pygame.Rect((pos[0]+1) * blockSize, (pos[1]+1) * blockSize,
                                blockSize, blockSize)
-      pygame.draw.rect(window, BLACK, o1, 1)
-      pygame.draw.rect(window, BLACK, o2, 1)
+      o3 = pygame.Rect((pos[0]+2) * blockSize, (pos[1]+1) * blockSize,
+                               blockSize, blockSize)
+      pygame.draw.rect(window, BLACK, o1)
+      pygame.draw.rect(window, BLACK, o2)
+      pygame.draw.rect(window, BLACK, o3)
 
 
      

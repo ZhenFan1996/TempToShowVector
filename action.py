@@ -83,7 +83,10 @@ def scanner_time(robot):
            robot.behavior.turn_in_place(degrees(90))
            print('4s later, turn left')
            print(robot.proximity.last_sensor_reading.distance.distance_mm)
-           if(robot.proximity.last_sensor_reading.distance.distance_mm<100):
+           if(robot.proximity.last_sensor_reading.distance.distance_mm<60):
+              pos = (robot.pose.position.x,robot.pose.position.y)
+              new = (int(pos[0] // 100),-int(pos[1] // 100))
+              env.obstacle_update(new,get_dir(robot))
               robot.behavior.turn_in_place(degrees(-90))
               print('obstacle,turn right')
               robot.motors.set_wheel_motors(75,75)
@@ -95,11 +98,11 @@ def scanner_time(robot):
 
 def get_dir(robot):
     degree = robot.pose.rotation.angle_z.degrees
-    if degree <= 10 and degree >= -10:
+    if degree <= 20 and degree >= -20:
         return 0 # x++ 上
-    elif degree <= -80 and degree >= -100:
+    elif degree <= -70 and degree >= -110:
         return 1 # y--右
-    elif degree <= 100 and degree >= 80:
+    elif degree <= 110 and degree >= 70:
         return 2 # y++ 左
     elif (degree <= 180 and degree >= 170) or (degree >= -180 and degree <= -170):
         return 3 # x--下
@@ -122,10 +125,14 @@ def observe(robot):
 
 def observe_test(robot):
     proximity_data = robot.proximity.last_sensor_reading
-    if(proximity_data.distance.distance_mm <100):
+    if(proximity_data.distance.distance_mm <60):
+        pos = (robot.pose.position.x,robot.pose.position.y)
+        new = (int(pos[0] // 100),-int(pos[1] // 100))
+        env.obstacle_update(new,get_dir(robot))
         robot.motors.stop_all_motors()
         print('obstacle find,trun right')
         robot.behavior.turn_in_place(degrees(-90))
+        robot.motors.set_wheel_motors(60,60)
 
 
 
