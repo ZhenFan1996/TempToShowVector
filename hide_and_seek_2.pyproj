@@ -27,7 +27,13 @@
     <Compile Include="action.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="detect.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="environment.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="detection.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="main.py">
@@ -51,6 +57,8 @@
     <Compile Include="map\test.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="predict_func.py" />
+    <Compile Include="window.py" />
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">
@@ -66,6 +74,11 @@
   <ItemGroup>
     <Folder Include="image\" />
     <Folder Include="map\" />
+    <Folder Include="contours\" />
+    <Folder Include="model\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="model\best.pt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

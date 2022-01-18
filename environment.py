@@ -11,8 +11,8 @@ WHITE = np.array((200,200,200))
 W = np.array((255,255,255))
 GREY = np.array((220,220,220))
 RED = np.array((255,0,0))
-window_height = 600
-window_width = 600
+window_height = 750
+window_width = 750
 matz = np.zeros([window_height // 10,window_width // 10])
 blockSize =30
 flag = False
@@ -89,7 +89,7 @@ def obstacle_draw(pos,dir):
                                blockSize, blockSize)
      pygame.draw.rect(window, BLACK, o1)
      pygame.draw.rect(window, BLACK, o2)
-     pygame.draw.rect(window, BLACK, o3)
+     #pygame.draw.rect(window, BLACK, o3)
     elif dir ==1: # y--右
       o1 = pygame.Rect((pos[0]+1) * blockSize, (pos[1]) * blockSize,
                                blockSize, blockSize)
@@ -99,7 +99,7 @@ def obstacle_draw(pos,dir):
                                blockSize, blockSize)
       pygame.draw.rect(window, BLACK, o1)
       pygame.draw.rect(window, BLACK, o2)
-      pygame.draw.rect(window, BLACK, o3)
+      #pygame.draw.rect(window, BLACK, o3)
     elif dir ==2: # y++ 左
       o1 = pygame.Rect((pos[0]-1) * blockSize, (pos[1]) * blockSize,
                                blockSize, blockSize)
@@ -109,7 +109,7 @@ def obstacle_draw(pos,dir):
                                blockSize, blockSize)
       pygame.draw.rect(window, BLACK, o1)
       pygame.draw.rect(window, BLACK, o2)
-      pygame.draw.rect(window, BLACK, o3)
+      #pygame.draw.rect(window, BLACK, o3)
     elif dir ==3: # x--下
       o1 = pygame.Rect((pos[0]) * blockSize, (pos[1]+1) * blockSize,
                                blockSize, blockSize)
@@ -119,7 +119,7 @@ def obstacle_draw(pos,dir):
                                blockSize, blockSize)
       pygame.draw.rect(window, BLACK, o1)
       pygame.draw.rect(window, BLACK, o2)
-      pygame.draw.rect(window, BLACK, o3)
+      #pygame.draw.rect(window, BLACK, o3)
 
 
      
