@@ -58,7 +58,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="predict_func.py" />
-    <Compile Include="window.py" />
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">
@@ -79,6 +78,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="model\best.pt" />
+    <Content Include="requirements.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

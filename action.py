@@ -19,7 +19,9 @@ path = [(0,0)]
 lastX ,lastY = 0,0
 last = (0,0)
 count =0
+nodes = []
 stack =[]
+
 
 class env_Thread(threading.Thread):
     def __init__(self, event):
@@ -36,11 +38,18 @@ class robot_Thread(threading.Thread):
        robot_init(robot)
 
 
+
 class node():
-    def __init__(self,x,y):
+    def __init__(self,x,y,dir):
         self.x =x
         self.y =y
-        self.dir = [0,0,0,0]
+        self.canGo = [0,0,0,0]
+        self.dir = dir
+        self.pathDic = {}
+
+    def type_set(type):
+        self.type = type
+
 
 def robot_init(robot):
       last_time = time.time()
@@ -143,7 +152,7 @@ def observe_test(robot):
         new = (int(pos[0] // 50),-int(pos[1] // 50))
         env.obstacle_update(new,get_dir(robot))
         robot.motors.stop_all_motors()
-        print('obstacle find,trun right')
+        #print('obstacle find,trun right')
         robot.behavior.turn_in_place(degrees(-90))
         robot.motors.set_wheel_motors(50,50)
 
@@ -232,12 +241,16 @@ def dfs(robot):
         observe_test(robot)
         if time.time()-last_time >2.0:
            robot.motors.stop_all_motors()
-           robot.behavior.turn_in_place(degrees(-90))
 
-           
 
-def turn(robot):
-    robot.behavior.turn_in_place(degrees(-90))
+
+
+## 获取当前机器人的基本信息，返回信息第一项为坐标，第二项为朝向，第三项为当前角度
+def getInfo(robot):
+    pos =(robot.pos.position.x,robot.pos.position.y)
+    dir = get_dir
+    degrees = robot.pose.rotation.angle_z.degrees
+    return [pos,dir,degrees]
 
 
 

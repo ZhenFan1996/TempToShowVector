@@ -29,7 +29,6 @@ def model_load(weights="",  # model.pt path(s)
     half &= pt and device.type != 'cpu'  # half precision only supported by PyTorch on CUDA
     if pt:
         model.model.half() if half else model.model.float()
-    print("模型加载完成!")
     return model
 
 
@@ -142,9 +141,9 @@ def run(img):
      return results,frame
 
 
-if __name__ == "__main__":
-    # 指明模型路径
-    model = model_load(weights=MODEL_PATH,
-                       device=DEVICE)  # todo 指明模型加载的位置的设备
-    results = detect_img(model=model, img_path="data/images/bus.jpg")
-    print(results)
+#if __name__ == "__main__":
+#    # 指明模型路径
+#    model = model_load(weights=MODEL_PATH,
+#                       device=DEVICE)  # todo 指明模型加载的位置的设备
+#    results = detect_img(model=model, img_path="data/images/bus.jpg")
+#    print(results)
