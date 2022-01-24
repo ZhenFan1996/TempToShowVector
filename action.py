@@ -22,7 +22,7 @@ count =0
 nodes = []
 stack =[]
 lastNode = None
-
+flag = True
 
 class env_Thread(threading.Thread):
     def __init__(self, event):
@@ -48,6 +48,7 @@ class node():
         self.pathDic = {}
         self.type = 0
         self.lastNodes = [None]*4
+        self.angle_z = angle_z
         self.pose = Pose(x=x,y=y,z=0,angle_z=angle_z)
 
     def type_set(type):
@@ -132,13 +133,13 @@ def scanner_time(robot):
 
 def get_dir(robot):
     degree = robot.pose.rotation.angle_z.degrees
-    if degree <= 30 and degree >= -30:
+    if degree <= 45 and degree >= -45:
         return 0 # x++ 上
-    elif degree <= -60 and degree >= -120:
+    elif degree <= -45 and degree >= -135:
         return 1 # y--右
-    elif degree <= 120 and degree >= 60:
+    elif degree <= 135 and degree > 45:
         return 3 # y++ 左
-    elif (degree <= 180 and degree >= 160) or (degree >= -180 and degree <= -160):
+    elif (degree <= 180 and degree > 135) or (degree >= -180 and degree < -135):
         return 2 # x--下
     else:
         return -1
@@ -239,10 +240,10 @@ def dir_correct(robot):
          diff = degree+180
      else:
          diff= degree-180
-    if abs(diff) >1.5:
+    if abs(diff) >2:
        robot.motors.stop_all_motors()
        robot.behavior.turn_in_place(degrees(-diff))
-       robot.motors.set_wheel_motors(60,60)
+       robot.motors.set_wheel_motors(60,60,240,240)
 
 ## 获取当前机器人的基本信息，返回信息第一项为坐标，第二项为朝向，第三项为当前角度
 def getInfo(robot):
@@ -290,6 +291,7 @@ def findroad(robot,dir,node):
           node.type =1 # 表示该点为特殊拐点
           print('发现拐点，并且拐点入栈')
           stack.append(node)
+          print('入栈的点的坐标为',(node.x,node.y))
 
 def anti_dir(dir):
     if dir ==0:
@@ -304,10 +306,9 @@ def anti_dir(dir):
 
 
 
-
 def observe_dfs(pos,dir,degree):
     proximity_data = robot.proximity.last_sensor_reading
-    if(proximity_data.distance.distance_mm <100):
+    if(proximity_data.distance.distance_mm <120):
         print('检测到障碍')
         robot.motors.stop_all_motors()
         n = node(pos[0],pos[1],Angle(degrees = degree))
@@ -333,9 +334,15 @@ def observe_dfs(pos,dir,degree):
         print(n.canGo)
         nodes.append(n)
         stack.append(n)
+        print('入栈的点的坐标为',(n.x,n.y))
         return n
     return None
 
+
+def stack_print():
+    for n in stack :
+        print([n.x,n.y])
+        print(n.canGo)
 
 def priority_find(node):
     for i in range(4):
@@ -344,38 +351,101 @@ def priority_find(node):
     return -1
 
 
+
+def go_to_node(ori,aim,dir):
+    print((aim.x,aim.y),(ori.x,ori.y))
+    diffX = aim.x - ori.x
+    diffY = aim.y - ori.y
+    toDir = -1
+    if abs(diffY)>abs(diffX):
+       if diffY >0 :
+           toDir = 3
+       else:
+           toDir = 1
+    else:
+        if diffX >0:
+           toDir = 0
+        else:
+           toDir = 2
+    print('dir',dir,'toDir',toDir)
+    robot.behavior.turn_in_place(anki_vector.util.degrees(-90*(toDir-dir)))
+    robot.motors.set_wheel_motors(60,60,240,240)
+    pos,dir,degrees = getInfo(robot)
+    print()
+    while (abs(aim.x-pos[0])>150) or abs(aim.y -pos[1])>150:
+        pos,dir,degrees = getInfo(robot)
+    print('到达目标节点')
+    robot.motors.stop_all_motors()
+
+     
+
 def dfs(robot):
     last_time = time.time()
     while True:
         pos,dir,degree = getInfo(robot)
-        #dir_correct(robot)
+        dir_correct(robot)
         print(degree)
         n = observe_dfs(pos,dir,degree)
         while n!=None:
             last_time = time.time()
             pri_dir = priority_find(n)
             print(pri_dir)
-            if pri_dir !=-1:
-                n = None
+            if pri_dir !=-1:               
                 robot.behavior.turn_in_place(degrees(-90*(pri_dir-dir)))  # 转到目标方向
                 print('转到'+ dir_print(pri_dir) )
-                robot.motors.set_wheel_motors(62,60)
+                n.canGo[pri_dir] = -1
+                n = None
+                robot.motors.set_wheel_motors(60,60,240,240)
             else:
-                n = n.lastNodes[anti_dir(get_dir(robot))]
-                robot.behavior.go_to_pose(n.pose)
+                stack.pop()
+                stack_print()
+                print('正在回溯，当前坐标为',(n.x,n.y))
+                ori =n
+                n = stack.pop()
+                degree =robot.pose.rotation.angle_z.degrees
+                robot.behavior.turn_in_place(degrees(-degree))
+                print('回到0度')
+                go_to_node(ori,n,get_dir(robot))
         if time.time()-last_time >4.0:
            print(degree)
-           robot.motors.stop_all_motors()           
+           robot.motors.stop_all_motors()
            n = node (pos[0],pos[1],Angle(degrees=degree))
            findroad(robot,dir,n)
+           after = robot.pose.rotation.angle_z.degrees
+           #robot.behavior.turn_in_place(degrees(degree-after))
+           n.canGo[dir] =-1
            if(len(nodes)!=0):
                n.lastNodes[anti_dir(dir)] = nodes[-1]
                nodes[-1].lastNodes[dir] =n
-           nodes.append(n)        
-           robot.motors.set_wheel_motors(62,60)
+           nodes.append(n)
+           robot.motors.set_wheel_motors(60,60,240,240)
            last_time = time.time()
 
+def drive_set(robot,turn_dir,):
+    last_degree =  robot.pose.rotation.angle_z.degrees
+    if drive_dir < 0:
+       turn_dir = -turn_dir
+       # It feels more natural to turn the opposite way when reversing
 
+    forward_speed = 50
+    turn_speed = 30
+
+    l_wheel_speed = (drive_dir * forward_speed) + (turn_speed * turn_dir)
+    r_wheel_speed = (drive_dir * forward_speed) - (turn_speed * turn_dir)
+
+    wheel_params = (l_wheel_speed, r_wheel_speed, l_wheel_speed * 4, r_wheel_speed * 4)
+    robot.motors.set_wheel_motors(*wheel_params)
+    curr = robot.pose.rotation.angle_z.degrees
+    while curr - last_degree > -90 :
+      curr = robot.pose.rotation.angle_z.degrees
+        
+
+
+
+def test(robot):
+    while True:
+        time.sleep(2)
+        print(robot.pose.rotation.angle_z.degrees)
 
 
 
@@ -383,7 +453,7 @@ def initialize():
 	robot = anki_vector.Robot(serial= '008014c1')
 	robot.connect()
 	robot.camera.init_camera_feed()
-	robot.behavior.set_head_angle(degrees(0))
+	robot.behavior.set_head_angle(degrees(10))
 	return robot
 
 
@@ -393,7 +463,7 @@ if __name__ == '__main__':
   robot = initialize()
   env_thread = env_Thread(event)
   robot_Thread = robot_Thread(robot)
-  go_Thread = threading.Thread(target= dfs,args =[robot])
+  go_Thread = threading.Thread(target= test,args =[robot])
   #observe_Thread = threading.Thread(target =observe_test,args =[robot])
   #env_thread.start()
   #robot_Thread.start()
