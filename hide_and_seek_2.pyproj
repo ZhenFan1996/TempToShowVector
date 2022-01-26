@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>eaa9b906-a4a8-4771-9d90-76a1f1d091c4</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>action.py</StartupFile>
+    <StartupFile>action2.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -25,6 +25,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="action.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="action2.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="detect.py">
