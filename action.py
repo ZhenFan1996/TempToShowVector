@@ -176,7 +176,6 @@ def observe_test(robot):
 
 
 def img_show(robot):
-    global count
     photo = robot.camera.latest_image
     image = photo.raw_image
     img = np.array(image)
