@@ -12,7 +12,7 @@ import numpy as np
 
 r1 = '008014c1'
 r2 = '0070132a'
-robot = anki_vector.AsyncRobot(serial= r1,enable_nav_map_feed= True)
+robot = anki_vector.AsyncRobot(serial= r2,enable_nav_map_feed= True)
 speed =  90
 offset = 100
 path_dis =300
@@ -21,6 +21,7 @@ last_time = time.time()
 
 stack = []
 res =[]
+isFind = False
 start = False
 
 class node():
@@ -33,22 +34,26 @@ class node():
         self.dirPose[get_dir()] = robot.pose
         self.time = time.time()
 
-
-
     def isInAreaNode(self,pose):
         x = pose.position.x
         y = pose.position.y
         return  abs(x-self.pos[0])<100 and abs(y-self.pos[1])<100
 
 
+class custom():
+    def __init__(self,x,y,c):
+        self.pos =(x,y)
+        self.canGo = c
+
 def isNodeExist(toCheck):
     for n in stack:
-        if n.isInAreaNode(toCheck.pose)and abs(n.time-toCheck.time)>10:
+        if n.isInAreaNode(toCheck.pose)and abs(n.time-toCheck.time)>15:
             return n
     return None
 
 
 def img_show():
+    global isFind
     photo = robot.camera.latest_image
     image = photo.raw_image
     img = np.array(image)
@@ -56,9 +61,20 @@ def img_show():
     temp = './temp.jpg'
     cv2.imwrite(temp,img)
     res,frame = predict_func.run(temp)
-    print(res)
+    #print(res)
+    if(len(res)!=0):
+        isFind = True
+        print('找到了')
     cv2.imshow('f',frame)
     key = cv2.waitKey(1)
+
+def stop(go_Thread):
+    while True:
+      if isFind:
+          go_Thread.join()
+          print('结束了')
+          break
+
 
 def getNum(list):
     if len(list) == 1:
@@ -294,8 +310,7 @@ def move():
            print('当前节点的canGo状况',n.canGo)           
            pri_dir = base_on_canGo_dir(n)
            if pri_dir !=-1:
-             dir = get_dir() 
-             future = robot.behavior.turn_in_place(degrees(-90*(pri_dir-dir)),speed =Angle(degrees=120))
+             future = robot.behavior.turn_in_place(degrees(-90*(pri_dir-get_dir())),speed =Angle(degrees=120))
              future.result()
              n.canGo[pri_dir] =-1
              if n.type ==1 and is_go_back:
@@ -334,9 +349,61 @@ def detect():
     while True:
         img_show()
 
-nl = []
+test_data = [custom(0,0,[1,1,0,0])
+      ,custom(989.5,-14.1,[0,1,1,0])
+      ,custom(1047.2,-705.2,[0,0,1,1])
+      ,custom(30.2,-629.9,[1,1,0,1])
+      ,custom(53.3,-914.7,[1,0,0,1])
+      ,custom(40.8,-321.8,[1,1,0,1])]
 
-def seek(nodeList):
+def seek(test_data):
+    #pose = robot.pose
+    #for n in nl:
+    #    if n.isInAreaNode():
+    #        start =n
+    #        break
+    keyboard.wait('a')
+    for i in range(len(nl)):
+        search(nl[i])      
+        if i != len(nl)-1:
+           go_to_node2(nl[i],nl[i+1])
+        else:
+           go_to_node2(nl[i],nl[0])
+
+def go_to_node2(ori,aim):
+    print('开始回溯')
+    print((aim.pos[0],aim.pos[1]),(ori.pos[0],ori.pos[1]),'开始移动')
+    diffX = aim.pos[0] - ori.pos[0]
+    diffY = aim.pos[1] - ori.pos[1]
+    toDir = -1
+    distance = 0
+    if abs(diffY)>abs(diffX):
+       distance = abs(diffY)-20
+       if diffY >0 :
+           toDir = 3
+       else:
+           toDir = 1
+    else:
+        distance = abs(diffX)-20
+        if diffX >0:
+           toDir = 0
+        else:
+           toDir = 2
+    print('目标方向是',dir_print(toDir))
+    turn_future =robot.behavior.turn_in_place(degrees(-90*(toDir-get_dir())),speed =Angle(degrees=120))
+    turn_future.result()
+    move_future = robot.behavior.drive_straight(distance_mm(distance),speed_mmps(100))
+    move_future.result()
+    print('到达目标节点')
+    robot.motors.stop_all_motors()
+
+def search(node):
+    ori_dir = get_dir()
+    for i in range(len(node.canGo)):
+        if node.canGo[i] ==1 and i != anti_dir(ori_dir):
+           future = robot.behavior.turn_in_place(degrees(-90*(i-get_dir())),speed =Angle(degrees=120))
+           future.result()
+           time.sleep(3)
 
 
 def test():
@@ -358,6 +425,10 @@ def test():
 if __name__ == '__main__':
   robot.connect()
   robot.camera.init_camera_feed()
-  detect_Thread = threading.Thread(target = detect,args =[])
+  #detect_Thread = threading.Thread(target = detect,args =[])
   #detect_Thread.start()
+  #seek_Thread = threading.Thread(target = seek,args =[nl])
+  #stop_Thread = threading.Thread(target = stop,args =[seek_Thread])
+  #seek_Thread.start()
+  #stop_Thread.start()
   move()
