@@ -11,7 +11,7 @@ from pathlib import Path
 import cv2
 
 DEVICE = "cpu"
-MODEL_PATH = "./model/best.pt"
+MODEL_PATH = "./model/best2.pt"
 
 
 @torch.no_grad()

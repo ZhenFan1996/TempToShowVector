@@ -30,6 +30,9 @@
     <Compile Include="action2.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="action3.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="detect.py">
       <SubType>Code</SubType>
     </Compile>
@@ -81,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="model\best.pt" />
+    <Content Include="model\best2.pt" />
     <Content Include="requirements.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />

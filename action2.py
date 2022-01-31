@@ -12,17 +12,19 @@ import numpy as np
 
 r1 = '008014c1'
 r2 = '0070132a'
-robot = anki_vector.AsyncRobot(serial= r2,enable_nav_map_feed= True)
+robot = anki_vector.AsyncRobot(serial= r1,enable_nav_map_feed= True)
+robotH = anki_vector.AsyncRobot(serial= r2,enable_nav_map_feed= True)
 speed =  90
-offset = 100
-path_dis =300
+offset = 90
+path_dis =240
 last_time = time.time()
 
 
 stack = []
-res =[]
+turnNodes =[]
 isFind = False
 start = False
+trun_offset =[(0,0),(-25,-25),(-50,0),(-25,25)]
 
 class node():
     def __init__(self):
@@ -37,7 +39,7 @@ class node():
     def isInAreaNode(self,pose):
         x = pose.position.x
         y = pose.position.y
-        return  abs(x-self.pos[0])<100 and abs(y-self.pos[1])<100
+        return  abs(x-self.pos[0])<120 and abs(y-self.pos[1])<120
 
 
 class custom():
@@ -62,18 +64,14 @@ def img_show():
     cv2.imwrite(temp,img)
     res,frame = predict_func.run(temp)
     #print(res)
-    if(len(res)!=0):
+    if(len(res)!=0 and res[0]['score']>0.7):
         isFind = True
         print('找到了')
+        robot.motors.stop_all_motors()
+        robot.behavior.say_text('Win win!')
+        robot.disconnect()
     cv2.imshow('f',frame)
     key = cv2.waitKey(1)
-
-def stop(go_Thread):
-    while True:
-      if isFind:
-          go_Thread.join()
-          print('结束了')
-          break
 
 
 def getNum(list):
@@ -108,7 +106,7 @@ def dir_correct():
          de= -180
     if abs(diff) >4:
        robot.motors.stop_all_motors()
-       turn_future = robot.behavior.turn_in_place(angle = degrees(de),is_absolute =True,speed = degrees(90))
+       turn_future = robot.behavior.turn_in_place(angle = degrees(de),is_absolute =True,speed = degrees(120))
        turn_future.result()
        move_future = robot.motors.set_wheel_motors(speed,speed,speed*4,speed*4)
        move_future.result()
@@ -131,9 +129,21 @@ def observe_dfs():
 
 def get_dir():
     list =[]
-    for i in range(20):
+    for i in range(100):
         list.append(robot.pose.rotation.angle_z.degrees)
     degree = np.mean(list)
+    if degree <= 15 and degree >= -15:
+        return 0 # x++ 上
+    elif degree <= -75 and degree > -105:
+        return 1 # y--右
+    elif degree <= 105 and degree > 75:
+        return 3 # y++ 左
+    elif (degree <= 180 and degree > 165) or (degree >= -180 and degree < -165):
+        return 2 # x--下
+    else:
+        return -1
+
+def degree_dir(degree):
     if degree <= 10 and degree >= -10:
         return 0 # x++ 上
     elif degree <= -80 and degree > -100:
@@ -143,8 +153,7 @@ def get_dir():
     elif (degree <= 180 and degree > 170) or (degree >= -180 and degree < -170):
         return 2 # x--下
     else:
-        return 0
-
+        return -1
 
 def pathExist():
     list =[]
@@ -173,6 +182,8 @@ def dir_print(dir):
     elif dir ==3:
        return '左'
 
+res =[]
+
 def check(forward_obstacle):
      n = node()
      n.canGo[anti_dir(get_dir())] = -1
@@ -186,7 +197,7 @@ def check(forward_obstacle):
         list.append(proximity_data.distance.distance_mm)
         time.sleep(0.001)
        #print('当前离障碍距离为',proximity_data.distance.distance_mm)
-       if np.mean(list)< offset:
+       if np.mean(list)< offset+30:
            n.canGo[get_dir()] = 0
        else:
            n.canGo[get_dir()] = 1     
@@ -223,6 +234,7 @@ def check(forward_obstacle):
              stack.pop()
              #print('重复了，抛出老点')
          stack.append(n)
+         turnNodes.append(n)
          print('该点入栈,坐标为',n.pos)
          stack_print()
      else:
@@ -244,21 +256,37 @@ def base_on_canGo_dir(n):
             return i
     return -1
 
+def off_get(dir1,dir2):
+    diff =dir1-dir2
+    if diff > 0:
+        pass
+
 def go_to_node(ori,aim):
     print('开始回溯')
     print((aim.position.x,aim.position.y),(ori.position.x,ori.position.y),'开始节点回溯')
-    diffX = aim.position.x - ori.position.x
-    diffY = aim.position.y - ori.position.y
+    degreeO = ori.rotation.angle_z.degrees
+    degreeA = ori.rotation.angle_z.degrees
+    dirO = degree_dir(degreeO)
+    dirA = degree_dir(degreeA)
+    diffDir = dirA-dirO
+    move_offset = 0
+    if diffDir<0:
+        move_offset = 15
+    elif diffDir >0:
+        move_offset = -15
+    diffX = aim.position.x - ori.position.x + move_offset
+    diffY = aim.position.y - ori.position.y + move_offset
+
     toDir = -1
     distance = 0
     if abs(diffY)>abs(diffX):
-       distance = abs(diffY)-20
+       distance = abs(diffY)
        if diffY >0 :
            toDir = 3
        else:
            toDir = 1
     else:
-        distance = abs(diffX)-20
+        distance = abs(diffX)
         if diffX >0:
            toDir = 0
         else:
@@ -297,8 +325,8 @@ def move():
     lift_future =robot.behavior.set_lift_height(MAX_LIFT_HEIGHT_MM)
     lift_future.result()
     while True:
-      if(start and len(stack)==0):
-          break
+      #if(start and len(stack)==0):
+      #    break
       start = True
       time.sleep(0.01)
       forward_obstacle = observe_dfs()
@@ -328,12 +356,21 @@ def move():
              pri_dir = base_on_canGo_dir(n)
              if pri_dir!=-1:
               print('当前方向为',dir_print(get_dir()))
-              go_to_node(robot.pose,n.dirPose[pri_dir])
+              #aim = n.dirPose[anti_dir(get_dir())]
+              #if aim ==None:
+              #    aim = n.pose
+              #go_to_node(robot.pose,aim)
+              go_future = robot.behavior.go_to_pose(n.dirPose[pri_dir])
+              go_future.result()
+              time.sleep(0.1)
+              lift_future =robot.behavior.set_lift_height(MAX_LIFT_HEIGHT_MM)
+              lift_future.result()
              else:
-              print(n.pos)
-              #go_future = robot.behavior.go_to_pose(n.pose)
-              #go_future.result()
-              go_to_node(robot.pose,n.pose)
+              go_future = robot.behavior.go_to_pose(n.pose)
+              go_future.result()
+              time.sleep(0.1)
+              lift_future =robot.behavior.set_lift_height(MAX_LIFT_HEIGHT_MM)
+              lift_future.result()
              is_go_back = True
              #lift_future =robot.behavior.set_lift_height(MAX_LIFT_HEIGHT_MM)
              #lift_future.result()
@@ -341,13 +378,21 @@ def move():
           future = robot.motors.set_wheel_motors(speed,speed,speed*4,speed*4)
           future.result()
           #time.sleep(0.1)
-    robot.disconnect()
     print('遍历结束')
+    robot.motors.stop_all_motors()
+    keyboard.wait('c')
+    print('start seek')
+    seek()
 
 
-def detect():  
+def detect():
+    t = time.time()
     while True:
-        img_show()
+      try:
+        if time.time()-t> 0.6:
+           img_show()
+      except Exception:
+        break
 
 test_data = [custom(0,0,[1,1,0,0])
       ,custom(989.5,-14.1,[0,1,1,0])
@@ -356,19 +401,18 @@ test_data = [custom(0,0,[1,1,0,0])
       ,custom(53.3,-914.7,[1,0,0,1])
       ,custom(40.8,-321.8,[1,1,0,1])]
 
-def seek(test_data):
+def seek():
     #pose = robot.pose
     #for n in nl:
     #    if n.isInAreaNode():
     #        start =n
     #        break
-    keyboard.wait('a')
-    for i in range(len(nl)):
-        search(nl[i])      
+    for i in range(len(turnNodes)):
+        search(turnNodes[i])      
         if i != len(nl)-1:
-           go_to_node2(nl[i],nl[i+1])
+           go_to_node(nl[i],nl[i+1])
         else:
-           go_to_node2(nl[i],nl[0])
+           go_to_node(nl[i],nl[0])
 
 def go_to_node2(ori,aim):
     print('开始回溯')
@@ -378,13 +422,13 @@ def go_to_node2(ori,aim):
     toDir = -1
     distance = 0
     if abs(diffY)>abs(diffX):
-       distance = abs(diffY)-20
+       distance = abs(diffY)-15
        if diffY >0 :
            toDir = 3
        else:
            toDir = 1
     else:
-        distance = abs(diffX)-20
+        distance = abs(diffX)-15
         if diffX >0:
            toDir = 0
         else:
@@ -400,11 +444,32 @@ def go_to_node2(ori,aim):
 def search(node):
     ori_dir = get_dir()
     for i in range(len(node.canGo)):
-        if node.canGo[i] ==1 and i != anti_dir(ori_dir):
+        if node.canGo[i] ==1 or node.canGo[i] ==-1 and i != anti_dir(ori_dir):
            future = robot.behavior.turn_in_place(degrees(-90*(i-get_dir())),speed =Angle(degrees=120))
            future.result()
-           time.sleep(3)
+           time.sleep(4)
 
+def hide():
+    keyboard.wait('s')
+    future = robotH.motors.set_wheel_motors(speed,speed,speed*4,speed*4)
+    future.result()
+    while True:
+        print(robotH.proximity.last_sensor_reading.distance.distance_mm )
+        dir = random.choice(1,2,3)
+        if robotH.proximity.last_sensor_reading.distance.distance_mm < offset:
+            robotH.motors.stop_all_motors()
+            turn_future = robotH.behavior.turn_in_place(degrees(-90)*dir,speed =Angle(degrees = 120))
+            turn_future.result()
+            future = robotH.motors.set_wheel_motors(speed,speed,speed*4,speed*4)
+            future.result()
+
+
+def see_Vector():
+    global isFind
+    while True:
+       if isFind:
+          robot.motors.stop_all_motors()
+          robot.behavior.say_text('Win win!')
 
 def test():
     future = robot.motors.set_wheel_motors(speed,speed,speed*4,speed*4)
@@ -412,8 +477,8 @@ def test():
     while True:
       proximity_data = robot.proximity.last_sensor_reading
       print(proximity_data.distance.distance_mm)
-      if (proximity_data.distance.distance_mm<100):
-          robot.motors.stop_all_motors()
+      if (proximity_data.distance.distance_mm<150):
+          robotH.motors.stop_all_motors()
           right = robot.behavior.turn_in_place(degrees(-90),speed =Angle(degrees=90))
           right.result()
           future = robot.motors.set_wheel_motors(speed,speed,speed*4,speed*4)
@@ -424,11 +489,14 @@ def test():
 
 if __name__ == '__main__':
   robot.connect()
+  #robotH.connect()
   robot.camera.init_camera_feed()
   #detect_Thread = threading.Thread(target = detect,args =[])
   #detect_Thread.start()
-  #seek_Thread = threading.Thread(target = seek,args =[nl])
-  #stop_Thread = threading.Thread(target = stop,args =[seek_Thread])
-  #seek_Thread.start()
+  seek_Thread = threading.Thread(target = move,args =[])
+
+  seek_Thread.start()
   #stop_Thread.start()
-  move()
+  #hide_Thread = threading.Thread(target = hide,args =[])
+  #seek_Thread.start()
+  #hide_Thread.start()

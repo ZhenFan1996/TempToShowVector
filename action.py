@@ -72,7 +72,7 @@ def robot_init(robot):
       last_time = time.time()
       while True:
         proximity_data = robot.proximity.last_sensor_reading
-        #img_show(robot)
+        img_show(robot)
         pos = (robot.pose.position.x,robot.pose.position.y)
         position_transform(pos,50)
         #env.update(path)
@@ -173,19 +173,21 @@ def observe_test(robot):
         robot.behavior.turn_in_place(degrees(-90))
         robot.motors.set_wheel_motors(50,50)
 
-
+count = 0
 
 def img_show(robot):
+    global count
     photo = robot.camera.latest_image
     image = photo.raw_image
     img = np.array(image)
     img = img[:,:,::-1].copy()
-    temp = './temp.jpg'
-    cv2.imwrite(temp,img)
-    res,frame = predict_func.run(temp)
-    print(res)
-    cv2.imshow('f',frame)
+    cv2.imshow('img',img)
     key = cv2.waitKey(1)
+    name = random.randint(50,10000)
+    if key &0xFF == ord('q'):
+        cv2.imwrite('./new/' +str(count) +'.jpg',img)
+        count+=1
+
 
 
 
@@ -478,12 +480,12 @@ def initialize():
 if __name__ == '__main__':
   robot = initialize()
   #env_thread = env_Thread(event)
-  #robot_Thread = robot_Thread(robot)
-  go_Thread = threading.Thread(target= dfs,args =[robot])
+  robot_Thread = robot_Thread(robot)
+  #go_Thread = threading.Thread(target= dfs,args =[robot])
   #observe_Thread = threading.Thread(target =observe_test,args =[robot])
   #env_thread.start()
-  #robot_Thread.start()
-  go_Thread.start()
+  robot_Thread.start()
+  #go_Thread.start()
   #observe_Thread.start()
 
 
