@@ -9,6 +9,7 @@ from utils.plots import Annotator, colors, save_one_box
 from utils.torch_utils import select_device, time_sync
 from pathlib import Path
 import cv2
+import anki_vector
 
 DEVICE = "cpu"
 MODEL_PATH = "./model/best2.pt"
@@ -141,9 +142,3 @@ def run(img):
      return results,frame
 
 
-#if __name__ == "__main__":
-#    # 指明模型路径
-#    model = model_load(weights=MODEL_PATH,
-#                       device=DEVICE)  # todo 指明模型加载的位置的设备
-#    results = detect_img(model=model, img_path="data/images/bus.jpg")
-#    print(results)
