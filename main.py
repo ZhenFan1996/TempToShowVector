@@ -523,7 +523,7 @@ if __name__ == '__main__':
   robot.camera.init_camera_feed()
   detect_Thread = threading.Thread(target = detect,args =[])
   detect_Thread.start()
-  seek_Thread = threading.Thread(target = seekMok,args =[])
+  seek_Thread = threading.Thread(target = move,args =[])
   seek_Thread.start()
   hide_Thread = threading.Thread(target = hide,args =[])
   hide_Thread.start()
