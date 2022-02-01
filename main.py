@@ -44,11 +44,6 @@ class node():
         return  abs(x-self.pos[0])<80 and abs(y-self.pos[1])<80
 
 
-class custom():
-    def __init__(self,x,y,degree,c):
-        self.pos = Pose(x=x,y=y,z=0,angle_z = Angle(degrees = degree))
-        self.canGo = c
-
 def isNodeExist(toCheck):
     for n in stack:
         if n.isInAreaNode(toCheck.pose)and abs(n.time-toCheck.time)>15:
@@ -75,12 +70,6 @@ def img_show():
     key = cv2.waitKey(1)
 
 
-def getNum(list):
-    if len(list) == 1:
-        return list[0]
-    list.sort()
-    listteil = list[1:]
-    return np.mean(listteil)
     
     
 
@@ -114,50 +103,6 @@ def dir_correct():
        last_time = time.time()
 
 
-def get_dirH():
-    list =[]
-    for i in range(100):
-        list.append(robotH.pose.rotation.angle_z.degrees)
-    degree = np.mean(list)
-    if degree <= 15 and degree >= -15:
-        return 0 # x++ north
-    elif degree <= -75 and degree > -105:
-        return 1 # y--east
-    elif degree <= 105 and degree > 75:
-        return 3 # y++ sorth
-    elif (degree <= 180 and degree > 165) or (degree >= -180 and degree < -165):
-        return 2 # x--west
-    else:
-        return -1
-
-def dir_correctH():
-    dir = get_dirH()
-    degree = robotH.pose.rotation.angle_z.degrees
-    diff = 0
-    de = 0
-    if dir==0: # 上 0
-     diff = degree
-     de= 0
-    elif dir ==1: #右 -90
-     diff = degree+90
-     de =- 90
-    elif dir==3: #左 90 
-     diff = degree-90
-     de =90
-    elif dir ==2: #下 180或-180
-     if(degree<0):
-         diff = degree+180
-         de = 180
-     else:
-         diff= degree-180
-         de= -180
-    if abs(diff) >4:
-       robotH.motors.stop_all_motors()
-       turn_future = robotH.behavior.turn_in_place(angle = degrees(de),is_absolute =True,speed = degrees(120))
-       turn_future.result()
-       move_future = robotH.motors.set_wheel_motors(speed,speed,speed*4,speed*4)
-       move_future.result()
-       last_time = time.time()
 
 def observe_dfs():
     global last_time
@@ -404,35 +349,12 @@ def move():
              if n==stack[-1]and len(stack)>2:
                  stack.pop()
              n = stack.pop()
-             pri_dir = base_on_canGo_dir(n)
-             if pri_dir!=-1:
-              #print('当前方向为',dir_print(get_dir()))
-              #aim = n.dirPose[anti_dir(get_dir())]
-              #if aim ==None:
-              #    aim = n.pose
-              #go_to_node(robot.pose,aim)
-              try:
-               go_future = robot.behavior.go_to_pose(n.pose)
-               go_future.result()
-              except Exception:
-               go_future = robot.behavior.go_to_pose(n.pose)
-               go_future.result()
-              time.sleep(0.1)
-              lift_future =robot.behavior.set_lift_height(MAX_LIFT_HEIGHT_MM)
-              lift_future.result()
-             else:
-              try:
-               go_future = robot.behavior.go_to_pose(n.pose)
-               go_future.result()
-              except Exception:
-               go_future = robot.behavior.go_to_pose(n.pose)
-               go_future.result()
-              time.sleep(0.1)
-              lift_future =robot.behavior.set_lift_height(MAX_LIFT_HEIGHT_MM)
-              lift_future.result()
+             go_future = robot.behavior.go_to_pose(n.pose)
+             go_future.result()
+             time.sleep(0.1)
+             lift_future =robot.behavior.set_lift_height(MAX_LIFT_HEIGHT_MM)
+             lift_future.result()
              is_go_back = True
-             #lift_future =robot.behavior.set_lift_height(MAX_LIFT_HEIGHT_MM)
-             #lift_future.result()
           last_time = time.time()
           future = robot.motors.set_wheel_motors(speed,speed,speed*4,speed*4)
           future.result()
@@ -441,7 +363,7 @@ def move():
     robot.motors.stop_all_motors()
     keyboard.wait('c')
     print('start to seek')
-    seek2(seekstart)
+    seek(seekstart)
 
 
 def detect():
