@@ -27,12 +27,6 @@
     <Compile Include="main.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="action3.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="detect.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="environment.py">
       <SubType>Code</SubType>
     </Compile>

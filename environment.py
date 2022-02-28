@@ -6,6 +6,10 @@ import sys
 import threading
 import time
 
+##Initially, the maze was traversed using pygame for visualisation,
+# but this solution was abandoned because it was too complex and inefficient
+
+
 BLACK = np.array((0,0,0))
 WHITE = np.array((200,200,200))
 W = np.array((255,255,255))

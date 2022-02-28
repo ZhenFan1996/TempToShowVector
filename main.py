@@ -16,7 +16,11 @@ r2 = '0070132a'
 robot = anki_vector.AsyncRobot(serial= r1,enable_nav_map_feed= True)
 robotH = anki_vector.AsyncRobot(serial= r2,enable_nav_map_feed= True)
 speed =  90
+##Standard value when detecting an obstacle
+# if it is less than this value the robot decides that there is an obstacle ahead
 offset = 90
+##The standard value for determining access, 
+#if it is greater than this value, the robot determines that there is access ahead
 path_dis =240
 last_time = time.time()
 scanning = True
@@ -28,9 +32,22 @@ isFind = False
 start = False
 trun_offset =[(0,0),(-25,-25),(-50,0),(-25,25)]
 
+
+
 class node():
     def __init__(self):
-        self.pose = robot.pose
+        """
+        class node represent a turing node
+        Attributes:
+        pose: A boolean indicating if we like SPAM or not.
+        pos: An integer count of the eggs we have laid.
+        canGo:represents the four directions in which the robot can go
+        , with 0 being untravelled, 1 being travelled and -1 being travelled
+        type:Type of node, 0 for normal node, 1 for turining point
+        dirPose:Set of positions in four directions
+        time:Time of node generation
+        """
+        self.pose = robot.pose 
         self.pos = (self.pose.position.x,self.pose.position.y)
         self.canGo = [0,0,0,0]
         self.type = 0
@@ -39,12 +56,20 @@ class node():
         self.time = time.time()
 
     def isInAreaNode(self,pose):
+        '''
+        Determine if the parameter position is within the node
+        Args:
+        pose:location information
+        '''
         x = pose.position.x
         y = pose.position.y
         return  abs(x-self.pos[0])<80 and abs(y-self.pos[1])<80
 
 
 def isNodeExist(toCheck):
+    '''
+    Iterate over all turining points in the stack and determine if the input node is a turning point
+    '''
     for n in stack:
         if n.isInAreaNode(toCheck.pose)and abs(n.time-toCheck.time)>15:
             return n
@@ -52,6 +77,9 @@ def isNodeExist(toCheck):
 
 
 def img_show():
+    '''
+    The robot's camera collects the images and processes them for recognition.
+    '''
     global isFind
     photo = robot.camera.latest_image
     image = photo.raw_image
@@ -60,7 +88,6 @@ def img_show():
     temp = './temp.jpg'
     cv2.imwrite(temp,img)
     res,frame = predict_func.run(temp)
-    #print(res)
     if(len(res)!=0 and res[0]['score']>0.8):
         isFind = True
         print('Found!')
@@ -74,20 +101,23 @@ def img_show():
     
 
 def dir_correct():
+    '''
+    Calibrate the robot's orientation and make sure it goes in a straight line.
+    '''
     dir = get_dir()
     degree = robot.pose.rotation.angle_z.degrees
     diff = 0
     de = 0
-    if dir==0: # 上 0
+    if dir==0: # north 0
      diff = degree
      de= 0
-    elif dir ==1: #右 -90
+    elif dir ==1: #east -90
      diff = degree+90
      de =- 90
-    elif dir==3: #左 90 
+    elif dir==3: #west 90 
      diff = degree-90
      de =90
-    elif dir ==2: #下 180或-180
+    elif dir ==2: #south 180 or -180
      if(degree<0):
          diff = degree+180
          de = 180
@@ -105,6 +135,9 @@ def dir_correct():
 
 
 def observe_dfs():
+    '''
+    Observe the robot for obstacles in front of it
+    '''
     global last_time
     proximity_data = robot.proximity.last_sensor_reading
     list =[]
@@ -120,6 +153,11 @@ def observe_dfs():
     return False
 
 def get_dir():
+    '''
+    Determining the current direction of the robot
+    Returns:
+    0 - north, 1 -east, 2-west,3-south
+    '''
     list =[]
     for i in range(100):
         list.append(robot.pose.rotation.angle_z.degrees)
@@ -129,13 +167,18 @@ def get_dir():
     elif degree <= -75 and degree > -105:
         return 1 # y--east
     elif degree <= 105 and degree > 75:
-        return 3 # y++ sorth
+        return 3 # y++ south
     elif (degree <= 180 and degree > 165) or (degree >= -180 and degree < -165):
         return 2 # x--west
     else:
         return -1
 
 def degree_dir(degree):
+    '''
+    Determining the current direction of input degree
+    Returns:
+    0 - north, 1 -east, 2-west,3-south
+    '''
     if degree <= 10 and degree >= -10:
         return 0 # x++ 上
     elif degree <= -80 and degree > -100:
@@ -148,6 +191,12 @@ def degree_dir(degree):
         return -1
 
 def pathExist():
+    '''
+    Detects if there is access ahead
+    Returns:
+    True: Access road ahead
+    False: No Acces ahead
+    '''
     list =[]
     for i in range(30):
      proximity_data = robot.proximity.last_sensor_reading
@@ -166,15 +215,18 @@ def stack_print():
 
 def dir_print(dir):
     if dir == 0:
-       return '上'
+       return 'north'
     elif dir ==1:
-       return '右'
+       return 'east'
     elif dir ==2:
-       return '下'
+       return 'south'
     elif dir ==3:
-       return '左'
+       return 'west'
 
 def check(forward_obstacle):
+     '''
+     Check if the point at the current position is a turining point
+     '''
      global scanning
      n = node()
      n.canGo[anti_dir(get_dir())] = -1
@@ -239,6 +291,9 @@ def check(forward_obstacle):
      return n
 
 def checkRepeat(offset,n1,n2):
+    '''
+    Check if two nodes are agreeing nodes
+    '''
     diffX = abs(n1.pos[0]-n2.pos[0])
     diffY = abs (n1.pos[1]-n2.pos[1])
     if diffX <offset and diffY<offset:
@@ -246,6 +301,9 @@ def checkRepeat(offset,n1,n2):
     return False
 
 def base_on_canGo_dir(n):
+    '''
+    Determine the most preferred direction to go for this node, or return -1 if none
+    '''
     for i in range(4):
         if n.canGo[i] ==1:
             return i
@@ -257,6 +315,9 @@ def off_get(dir1,dir2):
         pass
 
 def go_to_node(ori,aim):
+    '''
+    Movement of position according to input
+    '''
     print((aim.position.x,aim.position.y),(ori.position.x,ori.position.y),'Start backtracking')
     degreeO = ori.rotation.angle_z.degrees
     degreeA = ori.rotation.angle_z.degrees
@@ -311,6 +372,9 @@ def anti_dir(dir):
     return -1
 
 def move():
+    '''
+    Traversal logic of the maze, seeking at the end of the traversal
+    '''
     global last_time,start,isFind
     seekstart = None
     keyboard.wait('a')
@@ -367,6 +431,9 @@ def move():
 
 
 def detect():
+    '''
+    Targeting at short intervals
+    '''
     t = time.time()
     while True:
       if isFind:
@@ -378,11 +445,9 @@ def detect():
 
 
 def seek(start):
-    #pose = robot.pose
-    #for n in nl:
-    #    if n.isInAreaNode():
-    #        start =n
-    #        break
+    '''
+    seek logic
+    '''
     startIndex = -1
     for i in range(len(turnNodes)):
         if(turnNodes[i]==start):
@@ -406,6 +471,9 @@ def seek(start):
 
 
 def search(node):
+    '''
+    Steer and watch for the node's canGo property
+    '''
     ori_dir = get_dir()
     for i in range(len(node.canGo)):
         if node.canGo[i] ==1 or node.canGo[i] ==-1 and i != anti_dir(ori_dir):
@@ -414,6 +482,9 @@ def search(node):
            time.sleep(1)
 
 def hide():
+    '''
+    logic for hider
+    '''
     keyboard.wait('a')
     future = robotH.motors.set_wheel_motors(speed,speed,speed*4,speed*4)
     future.result()

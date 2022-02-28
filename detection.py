@@ -3,6 +3,8 @@ import numpy as np
 import random
 import os
 
+##The solution of drawing the outline via opencv and using the resulting outline for target recognition was finally abandoned
+
 def drawContours(winName,image,contours,draw_on_blank):
     if(draw_on_blank):
         temp = np.ones(image.shape,dtype = np.uint8)*255
